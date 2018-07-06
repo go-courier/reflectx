@@ -12,7 +12,10 @@ import (
 func TestFullTypeName(t *testing.T) {
 	assert.Equal(t, "*int", FullTypeName(reflect.TypeOf(ptr.Int(1))))
 	assert.Equal(t, "*int", FullTypeName(reflect.PtrTo(reflect.TypeOf(1))))
-	assert.Equal(t, "*time.Time", FullTypeName(reflect.PtrTo(reflect.TypeOf(time.Now()))))
+	assert.Equal(t, "*(time)time.Time", FullTypeName(reflect.PtrTo(reflect.TypeOf(time.Now()))))
+	assert.Equal(t, "*struct { Name string }", FullTypeName(reflect.PtrTo(reflect.TypeOf(struct {
+		Name string
+	}{}))))
 }
 
 func TestIndirectType(t *testing.T) {

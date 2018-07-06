@@ -14,11 +14,12 @@ func FullTypeName(tpe reflect.Type) string {
 	}
 
 	if pkgPath := tpe.PkgPath(); pkgPath != "" {
+		buf.WriteRune('(')
 		buf.WriteString(pkgPath)
-		buf.WriteRune('.')
+		buf.WriteRune(')')
 	}
 
-	buf.WriteString(tpe.Name())
+	buf.WriteString(tpe.String())
 	return buf.String()
 }
 
