@@ -1,9 +1,15 @@
 package reflectx
 
 import (
-	"reflect"
 	"bytes"
+	"reflect"
 )
+
+var TypeBytes = reflect.TypeOf([]byte(""))
+
+func IsBytes(tpe reflect.Type) bool {
+	return tpe.Kind() != reflect.String && tpe.ConvertibleTo(TypeBytes)
+}
 
 func FullTypeName(tpe reflect.Type) string {
 	buf := bytes.NewBuffer(nil)

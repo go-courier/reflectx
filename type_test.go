@@ -3,11 +3,20 @@ package reflectx
 import (
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/go-courier/ptr"
 	"github.com/stretchr/testify/assert"
-	"time"
 )
+
+type Bytes []byte
+
+func TestIsBytes(t *testing.T) {
+	assert.True(t, IsBytes(reflect.TypeOf([]byte(""))))
+	assert.True(t, IsBytes(reflect.TypeOf(Bytes(""))))
+	assert.False(t, IsBytes(reflect.TypeOf("")))
+	assert.False(t, IsBytes(reflect.TypeOf(true)))
+}
 
 func TestFullTypeName(t *testing.T) {
 	assert.Equal(t, "*int", FullTypeName(reflect.TypeOf(ptr.Int(1))))
