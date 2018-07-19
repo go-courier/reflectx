@@ -11,27 +11,30 @@ func IsBytes(tpe reflect.Type) bool {
 	return tpe.Kind() != reflect.String && tpe.ConvertibleTo(TypeBytes)
 }
 
-func FullTypeName(tpe reflect.Type) string {
+func FullTypeName(rtype reflect.Type) string {
 	buf := bytes.NewBuffer(nil)
 
-	for tpe.Kind() == reflect.Ptr {
+	for rtype.Kind() == reflect.Ptr {
 		buf.WriteByte('*')
-		tpe = tpe.Elem()
+		rtype = rtype.Elem()
 	}
 
-	if pkgPath := tpe.PkgPath(); pkgPath != "" {
-		buf.WriteRune('(')
-		buf.WriteString(pkgPath)
-		buf.WriteRune(')')
+	if name := rtype.Name(); name != "" {
+		if pkgPath := rtype.PkgPath(); pkgPath != "" {
+			buf.WriteString(pkgPath)
+			buf.WriteRune('.')
+		}
+		buf.WriteString(name)
+		return buf.String()
 	}
 
-	buf.WriteString(tpe.String())
+	buf.WriteString(rtype.String())
 	return buf.String()
 }
 
-func IndirectType(tpe reflect.Type) reflect.Type {
+func Deref(tpe reflect.Type) reflect.Type {
 	if tpe.Kind() == reflect.Ptr {
-		return IndirectType(tpe.Elem())
+		return Deref(tpe.Elem())
 	}
 	return tpe
 }
