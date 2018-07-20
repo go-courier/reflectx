@@ -91,20 +91,24 @@ func EachField(typ Type, tagForName string, each func(field StructField, fieldDi
 		}
 
 		fieldType := Deref(field.Type())
-		isStructType := fieldType.Kind() == reflect.Struct
 
-		if field.Anonymous() && isStructType {
-			if !keepNested {
-				for _, tag := range tagsForKeepingNested {
-					if _, ok := fieldTag.Lookup(tag); ok {
-						keepNested = true
-						break
+		if field.Anonymous() {
+			switch fieldType.Kind() {
+			case reflect.Struct:
+				if !keepNested {
+					for _, tag := range tagsForKeepingNested {
+						if _, ok := fieldTag.Lookup(tag); ok {
+							keepNested = true
+							break
+						}
 					}
 				}
-			}
 
-			if !keepNested {
-				EachField(fieldType, tagForName, each)
+				if !keepNested {
+					EachField(fieldType, tagForName, each)
+					continue
+				}
+			case reflect.Interface:
 				continue
 			}
 		}

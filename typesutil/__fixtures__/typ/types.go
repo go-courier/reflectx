@@ -34,6 +34,7 @@ type Func func(a, b string) bool
 func F() {}
 
 type Struct struct {
+	Interface
 	a    string
 	A    string `json:"a"`
 	B    string `json:"b"`
