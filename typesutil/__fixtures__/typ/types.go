@@ -59,6 +59,10 @@ func (*Part) PtrValue() string {
 	return ""
 }
 
+type DeepCompose struct {
+	Struct
+}
+
 type Interface interface {
 	String() string
 }

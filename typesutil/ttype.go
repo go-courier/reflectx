@@ -9,8 +9,6 @@ import (
 	"reflect"
 	"strconv"
 	"sync"
-
-	"github.com/davecgh/go-spew/spew"
 )
 
 var (
@@ -238,9 +236,6 @@ func (ttype *TType) NumMethod() int {
 
 	ttype.tryScanMethods()
 
-	spew.Dump(ttype.ptrMethods)
-	spew.Dump(ttype.methods)
-
 	switch ttype.Type.(type) {
 	case *types.Pointer:
 		return len(ttype.ptrMethods)
@@ -353,13 +348,9 @@ func (ttype *TType) Field(i int) StructField {
 }
 
 func (ttype *TType) FieldByName(name string) (StructField, bool) {
-	for i := 0; i < ttype.NumField(); i++ {
-		f := ttype.Field(i)
-		if f.Name() == name {
-			return f, true
-		}
-	}
-	return nil, false
+	return ttype.FieldByNameFunc(func(s string) bool {
+		return name == s
+	})
 }
 
 func (ttype *TType) FieldByNameFunc(match func(string) bool) (StructField, bool) {
@@ -368,12 +359,19 @@ func (ttype *TType) FieldByNameFunc(match func(string) bool) (StructField, bool)
 		if match(f.Name()) {
 			return f, true
 		}
+		if f.Anonymous() {
+			if sf, ok := f.Type().FieldByNameFunc(match); ok {
+				return sf, ok
+			}
+		}
 	}
 	return nil, false
 }
 
 func (ttype *TType) NumField() int {
 	switch t := ttype.Type.(type) {
+	case *types.Pointer:
+		return FromTType(t.Elem()).NumField()
 	case *types.Named:
 		return FromTType(t.Underlying()).NumField()
 	case *types.Struct:

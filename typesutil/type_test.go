@@ -21,6 +21,8 @@ func TestType(t *testing.T) {
 	}
 
 	values := []interface{}{
+		typ.DeepCompose{},
+
 		func() *typ.Enum { v := typ.ENUM__ONE; return &v }(),
 		typ.ENUM__ONE,
 
