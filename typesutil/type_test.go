@@ -124,7 +124,8 @@ func check(t *testing.T, v interface{}) {
 
 		for i := 0; i < rt.NumMethod(); i++ {
 			rMethod := rt.Method(i)
-			tMethod, _ := tt.MethodByName(rMethod.Name())
+			tMethod, ok := tt.MethodByName(rMethod.Name())
+			require.True(t, ok)
 
 			require.Equal(t, rMethod.Name(), tMethod.Name())
 			require.Equal(t, rMethod.PkgPath(), tMethod.PkgPath())

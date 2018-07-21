@@ -51,6 +51,14 @@ type Part struct {
 	C string `json:"c"`
 }
 
+func (Part) Value() string {
+	return ""
+}
+
+func (*Part) PtrValue() string {
+	return ""
+}
+
 type Interface interface {
 	String() string
 }

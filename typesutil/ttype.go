@@ -9,6 +9,8 @@ import (
 	"reflect"
 	"strconv"
 	"sync"
+
+	"github.com/davecgh/go-spew/spew"
 )
 
 var (
@@ -170,60 +172,107 @@ func NewTypesTypeFromReflectType(rtype reflect.Type) types.Type {
 }
 
 func FromTType(ttype types.Type) *TType {
-	t := &TType{
+	return &TType{
 		Type: ttype,
 	}
-	t.NumMethod()
-	return t
 }
 
 type TType struct {
-	Type              types.Type
-	nonPointerMethods []*types.Func
+	Type types.Type
+
+	methodScanned bool
+	methods       []*types.Func
+	ptrMethods    []*types.Func
+}
+
+func methodsOf(typ types.Type) (methods []*TMethod) {
+	switch t := typ.(type) {
+	case *types.Named:
+		for i := 0; i < t.NumMethods(); i++ {
+			methodInfo := &TMethod{
+				Func: t.Method(i),
+			}
+			if _, ok := methodInfo.Func.Type().(*types.Signature).Recv().Type().(*types.Pointer); ok {
+				methodInfo.Ptr = true
+			}
+			methods = append(methods, methodInfo)
+		}
+
+		methods = append(methods, methodsOf(t.Underlying())...)
+	case *types.Pointer:
+		methods = append(methods, methodsOf(t.Elem())...)
+	case *types.Struct:
+		for i := 0; i < t.NumFields(); i++ {
+			field := t.Field(i)
+			if field.Anonymous() {
+				methods = append(methods, methodsOf(field.Type())...)
+			}
+		}
+	}
+	return
+}
+
+func (ttype *TType) tryScanMethods() {
+	if !ttype.methodScanned {
+		ttype.methodScanned = true
+		methods := methodsOf(ttype.Type)
+		for i := range methods {
+			m := methods[i]
+			if !m.Ptr {
+				ttype.methods = append(ttype.methods, m.Func)
+			}
+			ttype.ptrMethods = append(ttype.ptrMethods, m.Func)
+		}
+	}
 }
 
 func (ttype *TType) NumMethod() int {
-	switch t := ttype.Type.(type) {
-	case *types.Named:
-		if ttype.Kind() == reflect.Interface {
+	if ttype.Kind() == reflect.Interface {
+		switch t := ttype.Type.(type) {
+		case *types.Named:
 			return t.Underlying().(*types.Interface).NumMethods()
+		case *types.Interface:
+			return t.NumMethods()
 		}
-		if ttype.nonPointerMethods == nil {
-			for i := 0; i < t.NumMethods(); i++ {
-				m := t.Method(i)
-				recv := m.Type().(*types.Signature).Recv()
-				if _, ok := recv.Type().(*types.Pointer); !ok {
-					ttype.nonPointerMethods = append(ttype.nonPointerMethods, m)
-				}
-			}
-		}
-		return len(ttype.nonPointerMethods)
+	}
+
+	ttype.tryScanMethods()
+
+	spew.Dump(ttype.ptrMethods)
+	spew.Dump(ttype.methods)
+
+	switch ttype.Type.(type) {
 	case *types.Pointer:
-		if n, ok := t.Elem().(*types.Named); ok {
-			return n.NumMethods()
-		}
-		return 0
-	case *types.Interface:
-		return t.NumMethods()
+		return len(ttype.ptrMethods)
+	default:
+		return len(ttype.methods)
 	}
 	return 0
 }
 
 func (ttype *TType) Method(i int) Method {
-	switch t := ttype.Type.(type) {
-	case *types.Named:
-		if ttype.Kind() == reflect.Interface {
-			return &TMethod{Func: t.Underlying().(*types.Interface).Method(i)}
+	if ttype.Kind() == reflect.Interface {
+		switch t := ttype.Type.(type) {
+		case *types.Named:
+			return &TMethod{Recv: ttype, Func: t.Underlying().(*types.Interface).Method(i)}
+		case *types.Interface:
+			return &TMethod{Recv: ttype, Func: t.Method(i)}
 		}
-		return &TMethod{Func: ttype.nonPointerMethods[i]}
-	case *types.Pointer:
-		if n, ok := t.Elem().(*types.Named); ok {
-			return &TMethod{Func: n.Method(i), PointerRecv: true}
-		}
-		return nil
-	case *types.Interface:
-		return &TMethod{Func: t.Method(i)}
 	}
+
+	ttype.tryScanMethods()
+
+	switch ttype.Type.(type) {
+	case *types.Pointer:
+		if ttype.ptrMethods != nil {
+			return &TMethod{Recv: ttype, Func: ttype.ptrMethods[i]}
+		}
+	default:
+		if ttype.methods != nil {
+			return &TMethod{Recv: ttype, Func: ttype.methods[i]}
+		}
+	}
+
 	return nil
 }
 
@@ -529,7 +578,6 @@ func (ttype *TType) String() string {
 
 			recv := t.Recv()
 			if recv != nil {
-
 				switch recvTyp := recv.Type().(type) {
 				case *types.Pointer:
 					elem := recvTyp.Elem()
@@ -547,6 +595,11 @@ func (ttype *TType) String() string {
 						if n > 0 {
 							buf.WriteString(", ")
 						}
+					}
+				case *types.Struct:
+					buf.WriteString(FromTType(recvTyp).String())
+					if n > 0 {
+						buf.WriteString(", ")
 					}
 				}
 			}
@@ -621,8 +674,9 @@ func (f *TStructField) Type() Type {
 }
 
 type TMethod struct {
-	PointerRecv bool
-	Func        *types.Func
+	Ptr  bool
+	Recv *TType
+	Func *types.Func
 }
 
 func (m *TMethod) PkgPath() string {
@@ -642,17 +696,19 @@ func (m *TMethod) Name() string {
 
 func (m *TMethod) Type() Type {
 	s := m.Func.Type().(*types.Signature)
-	recv := s.Recv()
-	if recv != nil {
-		if _, ok := recv.Type().(*types.Pointer); !ok && m.PointerRecv {
-			return FromTType(types.NewSignature(
-				types.NewVar(0, recv.Pkg(), recv.Name(), types.NewPointer(recv.Type())),
-				s.Params(),
-				s.Results(),
-				s.Variadic(),
-			))
-		}
+	if m.Recv == nil {
 		return FromTType(s)
 	}
-	return FromTType(s)
+
+	pkg := (*types.Package)(nil)
+	if named, ok := m.Recv.Type.(*types.Named); ok {
+		pkg = named.Obj().Pkg()
+	}
+
+	return FromTType(types.NewSignature(
+		types.NewVar(0, pkg, "", m.Recv.Type),
+		s.Params(),
+		s.Results(),
+		s.Variadic(),
+	))
 }
