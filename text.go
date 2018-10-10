@@ -13,6 +13,10 @@ func MarshalText(v interface{}) ([]byte, error) {
 		rv = reflect.ValueOf(&v).Elem()
 	}
 
+	if rv.Kind() == reflect.Ptr && rv.IsNil() {
+		return nil, nil
+	}
+
 	if textMarshaler, ok := rv.Interface().(encoding.TextMarshaler); ok {
 		return textMarshaler.MarshalText()
 	}

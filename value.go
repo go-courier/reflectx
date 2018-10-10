@@ -26,6 +26,10 @@ func IsEmptyValue(v interface{}) bool {
 		rv = reflect.ValueOf(&v).Elem()
 	}
 
+	if rv.Kind() == reflect.Ptr && rv.IsNil() {
+		return true
+	}
+
 	if rv.IsValid() && rv.CanInterface() {
 		if canZero, ok := rv.Interface().(interface{ IsZero() bool }); ok {
 			return canZero.IsZero()
