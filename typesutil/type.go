@@ -65,7 +65,6 @@ func TryNew(u Type) (reflect.Value, bool) {
 
 var (
 	rtypeEncodingTextMarshaler = FromRType(reflect.TypeOf((*encoding.TextMarshaler)(nil)).Elem())
-	ttypeEncodingTextMarshaler = FromTType(TypeByName("encoding", "TextMarshaler").Underlying())
 )
 
 func EncodingTextMarshalerTypeReplacer(u Type) (Type, bool) {
@@ -73,6 +72,7 @@ func EncodingTextMarshalerTypeReplacer(u Type) (Type, bool) {
 	case *RType:
 		return FromRType(reflect.TypeOf("")), t.Implements(rtypeEncodingTextMarshaler)
 	case *TType:
+		ttypeEncodingTextMarshaler := FromTType(TypeByName("encoding", "TextMarshaler").Underlying())
 		return FromTType(types.Typ[types.String]), t.Implements(ttypeEncodingTextMarshaler)
 	}
 	return nil, false
