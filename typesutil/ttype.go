@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"go/ast"
 	"go/importer"
+	"go/token"
 	"go/types"
 	"reflect"
 	"strconv"
@@ -20,7 +21,10 @@ func NewPackage(importPath string) *types.Package {
 	if v, ok := pkgCache.Load(importPath); ok {
 		return v.(*types.Package)
 	}
-	pkg, _ := importer.For("source", nil).Import(importPath)
+	pkg, err := importer.ForCompiler(token.NewFileSet(), "source", nil).Import(importPath)
+	if err != nil && importPath != "" {
+		panic(err)
+	}
 	pkgCache.Store(importPath, pkg)
 	return pkg
 }

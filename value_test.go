@@ -5,15 +5,15 @@ import (
 	"testing"
 
 	"github.com/go-courier/ptr"
-	"github.com/stretchr/testify/assert"
+	. "github.com/onsi/gomega"
 )
 
 func TestIndirect(t *testing.T) {
-	assert.Equal(t, Indirect(reflect.ValueOf(ptr.Int(1))).Interface(), reflect.ValueOf(1).Interface())
-	assert.Equal(t, Indirect(reflect.New(reflect.TypeOf(0))).Interface(), reflect.ValueOf(0).Interface())
+	NewWithT(t).Expect(reflect.ValueOf(1).Interface()).To(Equal(Indirect(reflect.ValueOf(ptr.Int(1))).Interface()))
+	NewWithT(t).Expect(reflect.ValueOf(0).Interface()).To(Equal(Indirect(reflect.New(reflect.TypeOf(0))).Interface()))
 
 	rv := New(reflect.PtrTo(reflect.PtrTo(reflect.PtrTo(reflect.TypeOf("")))))
-	assert.Equal(t, Indirect(rv).Interface(), reflect.ValueOf("").Interface())
+	NewWithT(t).Expect(reflect.ValueOf("").Interface()).To(Equal(Indirect(rv).Interface()))
 }
 
 type Zero string
@@ -42,10 +42,10 @@ func TestIsEmptyValue(t *testing.T) {
 	}
 	for _, v := range emptyValues {
 		if rv, ok := v.(reflect.Value); ok {
-			assert.True(t, IsEmptyValue(rv))
+			NewWithT(t).Expect(IsEmptyValue(rv)).To(BeTrue())
 		} else {
-			assert.True(t, IsEmptyValue(v))
-			assert.True(t, IsEmptyValue(reflect.ValueOf(v)))
+			NewWithT(t).Expect(IsEmptyValue(v)).To(BeTrue())
+			NewWithT(t).Expect(IsEmptyValue(reflect.ValueOf(v))).To(BeTrue())
 		}
 
 	}
