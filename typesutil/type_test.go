@@ -9,10 +9,9 @@ import (
 	"unsafe"
 
 	"github.com/go-courier/ptr"
-	"github.com/stretchr/testify/require"
-
 	"github.com/go-courier/reflectx/typesutil/__fixtures__/typ"
 	typ2 "github.com/go-courier/reflectx/typesutil/__fixtures__/typ/typ"
+	. "github.com/onsi/gomega"
 )
 
 func TestType(t *testing.T) {
@@ -114,63 +113,63 @@ func check(t *testing.T, v interface{}) {
 	tt := FromTType(ttype)
 
 	t.Run(FullTypeName(rt), func(t *testing.T) {
-		require.Equal(t, rt.String(), tt.String())
-		require.Equal(t, rt.Kind().String(), tt.Kind().String())
-		require.Equal(t, rt.Name(), tt.Name())
-		require.Equal(t, rt.PkgPath(), tt.PkgPath())
-		require.Equal(t, rt.Comparable(), tt.Comparable())
-		require.Equal(t, rt.AssignableTo(FromRType(reflect.TypeOf(""))), tt.AssignableTo(FromTType(types.Typ[types.String])))
-		require.Equal(t, rt.ConvertibleTo(FromRType(reflect.TypeOf(""))), tt.ConvertibleTo(FromTType(types.Typ[types.String])))
+		NewWithT(t).Expect(rt.String()).To(Equal(tt.String()))
+		NewWithT(t).Expect(rt.Kind().String()).To(Equal(tt.Kind().String()))
+		NewWithT(t).Expect(rt.Name()).To(Equal(tt.Name()))
+		NewWithT(t).Expect(rt.PkgPath()).To(Equal(tt.PkgPath()))
+		NewWithT(t).Expect(rt.Comparable()).To(Equal(tt.Comparable()))
+		NewWithT(t).Expect(rt.AssignableTo(FromRType(reflect.TypeOf("")))).To(Equal(tt.AssignableTo(FromTType(types.Typ[types.String]))))
+		NewWithT(t).Expect(rt.ConvertibleTo(FromRType(reflect.TypeOf("")))).To(Equal(tt.ConvertibleTo(FromTType(types.Typ[types.String]))))
 
-		require.Equal(t, rt.NumMethod(), tt.NumMethod())
+		NewWithT(t).Expect(rt.NumMethod()).To(Equal(tt.NumMethod()))
 
 		for i := 0; i < rt.NumMethod(); i++ {
 			rMethod := rt.Method(i)
 			tMethod, ok := tt.MethodByName(rMethod.Name())
-			require.True(t, ok)
+			NewWithT(t).Expect(ok).To(BeTrue())
 
-			require.Equal(t, rMethod.Name(), tMethod.Name())
-			require.Equal(t, rMethod.PkgPath(), tMethod.PkgPath())
-			require.Equal(t, rMethod.Type().String(), tMethod.Type().String())
+			NewWithT(t).Expect(rMethod.Name()).To(Equal(tMethod.Name()))
+			NewWithT(t).Expect(rMethod.PkgPath()).To(Equal(tMethod.PkgPath()))
+			NewWithT(t).Expect(rMethod.Type().String()).To(Equal(tMethod.Type().String()))
 		}
 
 		{
 			_, rOk := rt.MethodByName("String")
 			_, tOk := tt.MethodByName("String")
-			require.Equal(t, rOk, tOk)
+			NewWithT(t).Expect(rOk).To(Equal(tOk))
 		}
 
 		{
 			rReplacer, rIs := EncodingTextMarshalerTypeReplacer(rt)
 			tReplacer, tIs := EncodingTextMarshalerTypeReplacer(tt)
-			require.Equal(t, rIs, tIs)
-			require.Equal(t, rReplacer.String(), tReplacer.String())
+			NewWithT(t).Expect(rIs).To(Equal(tIs))
+			NewWithT(t).Expect(rReplacer.String()).To(Equal(tReplacer.String()))
 		}
 
 		if rt.Kind() == reflect.Array {
-			require.Equal(t, rt.Len(), tt.Len())
+			NewWithT(t).Expect(rt.Len()).To(Equal(tt.Len()))
 		}
 
 		if rt.Kind() == reflect.Map {
-			require.Equal(t, FullTypeName(rt.Key()), FullTypeName(tt.Key()))
+			NewWithT(t).Expect(FullTypeName(rt.Key())).To(Equal(FullTypeName(tt.Key())))
 		}
 
 		if rt.Kind() == reflect.Array || rt.Kind() == reflect.Slice || rt.Kind() == reflect.Map {
-			require.Equal(t, FullTypeName(rt.Elem()), FullTypeName(tt.Elem()))
+			NewWithT(t).Expect(FullTypeName(rt.Elem())).To(Equal(FullTypeName(tt.Elem())))
 		}
 
 		if rt.Kind() == reflect.Struct {
-			require.Equal(t, rt.NumField(), tt.NumField())
+			NewWithT(t).Expect(rt.NumField()).To(Equal(tt.NumField()))
 
 			for i := 0; i < rt.NumField(); i++ {
 				rsf := rt.Field(i)
 				tsf := tt.Field(i)
 
-				require.Equal(t, rsf.Anonymous(), tsf.Anonymous())
-				require.Equal(t, rsf.Tag(), tsf.Tag())
-				require.Equal(t, rsf.Name(), tsf.Name())
-				require.Equal(t, rsf.PkgPath(), tsf.PkgPath())
-				require.Equal(t, FullTypeName(rsf.Type()), FullTypeName(tsf.Type()))
+				NewWithT(t).Expect(rsf.Anonymous()).To(Equal(tsf.Anonymous()))
+				NewWithT(t).Expect(rsf.Tag()).To(Equal(tsf.Tag()))
+				NewWithT(t).Expect(rsf.Name()).To(Equal(tsf.Name()))
+				NewWithT(t).Expect(rsf.PkgPath()).To(Equal(tsf.PkgPath()))
+				NewWithT(t).Expect(FullTypeName(rsf.Type())).To(Equal(FullTypeName(tsf.Type())))
 			}
 
 			if rt.NumField() > 0 {
@@ -178,19 +177,19 @@ func check(t *testing.T, v interface{}) {
 					rsf, _ := rt.FieldByName("A")
 					tsf, _ := tt.FieldByName("A")
 
-					require.Equal(t, rsf.Anonymous(), tsf.Anonymous())
-					require.Equal(t, rsf.Tag(), tsf.Tag())
-					require.Equal(t, rsf.Name(), tsf.Name())
-					require.Equal(t, rsf.PkgPath(), tsf.PkgPath())
-					require.Equal(t, FullTypeName(rsf.Type()), FullTypeName(tsf.Type()))
+					NewWithT(t).Expect(rsf.Anonymous()).To(Equal(tsf.Anonymous()))
+					NewWithT(t).Expect(rsf.Tag()).To(Equal(tsf.Tag()))
+					NewWithT(t).Expect(rsf.Name()).To(Equal(tsf.Name()))
+					NewWithT(t).Expect(rsf.PkgPath()).To(Equal(tsf.PkgPath()))
+					NewWithT(t).Expect(FullTypeName(rsf.Type())).To(Equal(FullTypeName(tsf.Type())))
 
 					{
 						_, ok := rt.FieldByName("_")
-						require.False(t, ok)
+						NewWithT(t).Expect(ok).To(BeFalse())
 					}
 					{
 						_, ok := tt.FieldByName("_")
-						require.False(t, ok)
+						NewWithT(t).Expect(ok).To(BeFalse())
 					}
 				}
 
@@ -202,42 +201,42 @@ func check(t *testing.T, v interface{}) {
 						return s == "A"
 					})
 
-					require.Equal(t, rsf.Anonymous(), tsf.Anonymous())
-					require.Equal(t, rsf.Tag(), tsf.Tag())
-					require.Equal(t, rsf.Name(), tsf.Name())
-					require.Equal(t, rsf.PkgPath(), tsf.PkgPath())
-					require.Equal(t, FullTypeName(rsf.Type()), FullTypeName(tsf.Type()))
+					NewWithT(t).Expect(rsf.Anonymous()).To(Equal(tsf.Anonymous()))
+					NewWithT(t).Expect(rsf.Tag()).To(Equal(tsf.Tag()))
+					NewWithT(t).Expect(rsf.Name()).To(Equal(tsf.Name()))
+					NewWithT(t).Expect(rsf.PkgPath()).To(Equal(tsf.PkgPath()))
+					NewWithT(t).Expect(FullTypeName(rsf.Type())).To(Equal(FullTypeName(tsf.Type())))
 
 					{
 						_, ok := rt.FieldByNameFunc(func(s string) bool {
 							return false
 						})
-						require.False(t, ok)
+						NewWithT(t).Expect(ok).To(BeFalse())
 					}
 					{
 						_, ok := tt.FieldByNameFunc(func(s string) bool {
 							return false
 						})
-						require.False(t, ok)
+						NewWithT(t).Expect(ok).To(BeFalse())
 					}
 				}
 			}
 		}
 
 		if rt.Kind() == reflect.Func {
-			require.Equal(t, rt.NumIn(), tt.NumIn())
-			require.Equal(t, rt.NumOut(), tt.NumOut())
+			NewWithT(t).Expect(rt.NumIn()).To(Equal(tt.NumIn()))
+			NewWithT(t).Expect(rt.NumOut()).To(Equal(tt.NumOut()))
 
 			for i := 0; i < rt.NumIn(); i++ {
 				rParam := rt.In(i)
 				tParam := tt.In(i)
-				require.Equal(t, rParam.String(), tParam.String())
+				NewWithT(t).Expect(rParam.String()).To(Equal(tParam.String()))
 			}
 
 			for i := 0; i < rt.NumOut(); i++ {
 				rResult := rt.Out(i)
 				tResult := tt.Out(i)
-				require.Equal(t, rResult.String(), tResult.String())
+				NewWithT(t).Expect(rResult.String()).To(Equal(tResult.String()))
 			}
 		}
 
@@ -245,7 +244,7 @@ func check(t *testing.T, v interface{}) {
 			rt = Deref(rt).(*RType)
 			tt = Deref(tt).(*TType)
 
-			require.Equal(t, rt.String(), tt.String())
+			NewWithT(t).Expect(rt.String()).To(Equal(tt.String()))
 		}
 	})
 }
@@ -253,11 +252,11 @@ func check(t *testing.T, v interface{}) {
 func TestTryNew(t *testing.T) {
 	{
 		_, ok := TryNew(FromRType(reflect.TypeOf(typ.Struct{})))
-		require.True(t, ok)
+		NewWithT(t).Expect(ok).To(BeTrue())
 	}
 	{
 		_, ok := TryNew(FromTType(NewTypesTypeFromReflectType(reflect.TypeOf(typ.Struct{}))))
-		require.False(t, ok)
+		NewWithT(t).Expect(ok).To(BeFalse())
 	}
 }
 
@@ -273,7 +272,7 @@ func TestEachField(t *testing.T) {
 			names = append(names, fieldDisplayName)
 			return true
 		})
-		require.Equal(t, expect, names)
+		NewWithT(t).Expect(expect).To(Equal(names))
 	}
 
 	{
@@ -283,6 +282,6 @@ func TestEachField(t *testing.T) {
 			names = append(names, fieldDisplayName)
 			return true
 		})
-		require.Equal(t, expect, names)
+		NewWithT(t).Expect(expect).To(Equal(names))
 	}
 }

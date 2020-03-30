@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/go-courier/ptr"
-	"github.com/stretchr/testify/assert"
+	. "github.com/onsi/gomega"
 )
 
 type Duration time.Duration
@@ -128,11 +128,13 @@ func TestMarshalTextAndUnmarshalText(t *testing.T) {
 	for _, c := range cases {
 		t.Run(fmt.Sprintf("UnmarshalText %s", c.v), func(t *testing.T) {
 			err := UnmarshalText(c.v, []byte(c.text))
-			assert.NoError(t, err)
+
+			NewWithT(t).Expect(err).To(BeNil())
+
 			if rv, ok := c.v.(reflect.Value); ok {
-				assert.Equal(t, c.expect, rv.Interface())
+				NewWithT(t).Expect(c.expect).To(Equal(rv.Interface()))
 			} else {
-				assert.Equal(t, c.expect, c.v)
+				NewWithT(t).Expect(c.expect).To(Equal(c.v))
 			}
 		})
 	}
@@ -140,8 +142,8 @@ func TestMarshalTextAndUnmarshalText(t *testing.T) {
 	for _, c := range cases {
 		t.Run(fmt.Sprintf("MarshalText by %s", c.text), func(t *testing.T) {
 			text, err := MarshalText(c.v)
-			assert.NoError(t, err)
-			assert.Equal(t, c.text, string(text))
+			NewWithT(t).Expect(err).To(BeNil())
+			NewWithT(t).Expect(c.text).To(Equal(string(text)))
 		})
 	}
 
@@ -154,11 +156,11 @@ func TestMarshalTextAndUnmarshalText(t *testing.T) {
 
 	{
 		_, err := MarshalText(rv2.FieldByName("Slice"))
-		assert.Error(t, err)
+		NewWithT(t).Expect(err).NotTo(BeNil())
 	}
 
 	{
 		_, err := MarshalText(rv2.FieldByName("PtrString"))
-		assert.NoError(t, err)
+		NewWithT(t).Expect(err).To(BeNil())
 	}
 }
