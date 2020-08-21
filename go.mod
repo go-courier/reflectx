@@ -4,5 +4,5 @@ go 1.14
 
 require (
 	github.com/go-courier/ptr v1.0.1
-	github.com/onsi/gomega v1.9.0
+	github.com/onsi/gomega v1.10.1
 )
