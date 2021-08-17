@@ -11,11 +11,30 @@ import (
 
 type Bytes []byte
 
+func BenchmarkIsBytes(b *testing.B) {
+	b.Run("Raw Bytes", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			IsBytes([]byte(""))
+		}
+	})
+	b.Run("Named Bytes", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			IsBytes(Bytes(""))
+		}
+	})
+}
+
 func TestIsBytes(t *testing.T) {
-	NewWithT(t).Expect(IsBytes(reflect.TypeOf([]byte("")))).To(BeTrue())
-	NewWithT(t).Expect(IsBytes(reflect.TypeOf(Bytes("")))).To(BeTrue())
-	NewWithT(t).Expect(IsBytes(reflect.TypeOf(""))).To(BeFalse())
-	NewWithT(t).Expect(IsBytes(reflect.TypeOf(true))).To(BeFalse())
+	t.Run("Raw Bytes", func(t *testing.T) {
+		NewWithT(t).Expect(IsBytes([]byte(""))).To(BeTrue())
+	})
+	t.Run("Named Bytes", func(t *testing.T) {
+		NewWithT(t).Expect(IsBytes(Bytes(""))).To(BeTrue())
+	})
+	t.Run("Others", func(t *testing.T) {
+		NewWithT(t).Expect(IsBytes("")).To(BeFalse())
+		NewWithT(t).Expect(IsBytes(true)).To(BeFalse())
+	})
 }
 
 func TestFullTypeName(t *testing.T) {

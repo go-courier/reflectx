@@ -9,6 +9,7 @@ import (
 	"go/types"
 	"reflect"
 	"strconv"
+	"strings"
 	"sync"
 )
 
@@ -246,7 +247,6 @@ func (ttype *TType) NumMethod() int {
 	default:
 		return len(ttype.methods)
 	}
-	return 0
 }
 
 func (ttype *TType) Method(i int) Method {
@@ -464,8 +464,14 @@ func (ttype *TType) Name() string {
 }
 
 func (ttype *TType) PkgPath() string {
-	if named, ok := ttype.Type.(*types.Named); ok {
-		return named.Obj().Pkg().Path()
+	switch x := ttype.Type.(type) {
+	case *types.Named:
+		return x.Obj().Pkg().Path()
+	case *types.Basic:
+		// unsafe.Pointer as basic since 1.17
+		if strings.HasPrefix(x.String(), "unsafe.") {
+			return "unsafe"
+		}
 	}
 	return ""
 }

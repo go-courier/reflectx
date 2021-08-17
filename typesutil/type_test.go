@@ -127,7 +127,6 @@ func check(t *testing.T, v interface{}) {
 			rMethod := rt.Method(i)
 			tMethod, ok := tt.MethodByName(rMethod.Name())
 			NewWithT(t).Expect(ok).To(BeTrue())
-
 			NewWithT(t).Expect(rMethod.Name()).To(Equal(tMethod.Name()))
 			NewWithT(t).Expect(rMethod.PkgPath()).To(Equal(tMethod.PkgPath()))
 			NewWithT(t).Expect(rMethod.Type().String()).To(Equal(tMethod.Type().String()))

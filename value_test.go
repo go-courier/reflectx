@@ -1,6 +1,7 @@
 package reflectx
 
 import (
+	"fmt"
 	"reflect"
 	"testing"
 
@@ -22,31 +23,84 @@ func (Zero) IsZero() bool {
 	return true
 }
 
-func TestIsEmptyValue(t *testing.T) {
-	type S struct {
-		V interface{}
-	}
+func BenchmarkNew(b *testing.B) {
+	tpe := reflect.PtrTo(reflect.TypeOf(Zero("")))
 
-	emptyValues := []interface{}{
-		Zero(""),
-		(*string)(nil),
-		(interface{})(nil),
-		(S{}).V,
-		"",
-		0,
-		uint(0),
-		float32(0),
-		false,
-		reflect.ValueOf(S{}).FieldByName("V"),
-		nil,
+	for i := 0; i < b.N; i++ {
+		_ = New(tpe)
 	}
-	for _, v := range emptyValues {
-		if rv, ok := v.(reflect.Value); ok {
-			NewWithT(t).Expect(IsEmptyValue(rv)).To(BeTrue())
-		} else {
-			NewWithT(t).Expect(IsEmptyValue(v)).To(BeTrue())
-			NewWithT(t).Expect(IsEmptyValue(reflect.ValueOf(v))).To(BeTrue())
+}
+
+func TestNew(t *testing.T) {
+	t.Run("NewType", func(t *testing.T) {
+		tpe := reflect.TypeOf(Zero(""))
+		_, ok := New(tpe).Interface().(Zero)
+		NewWithT(t).Expect(ok).To(BeTrue())
+	})
+
+	t.Run("NewPtrType", func(t *testing.T) {
+		tpe := reflect.PtrTo(reflect.TypeOf(Zero("")))
+		_, ok := New(tpe).Interface().(*Zero)
+		NewWithT(t).Expect(ok).To(BeTrue())
+	})
+
+	t.Run("NewPtrPtrType", func(t *testing.T) {
+		tpe := reflect.PtrTo(reflect.PtrTo(reflect.TypeOf(Zero(""))))
+		_, ok := New(tpe).Interface().(**Zero)
+		NewWithT(t).Expect(ok).To(BeTrue())
+	})
+}
+
+type S struct {
+	V interface{}
+}
+
+var emptyValues = []interface{}{
+	Zero(""),
+	(*string)(nil),
+	(interface{})(nil),
+	(S{}).V,
+	"",
+	0,
+	uint(0),
+	float32(0),
+	false,
+	reflect.ValueOf(S{}).FieldByName("V"),
+	nil,
+}
+
+var nonEmptyValues = []interface{}{
+	Zero("11111111111"),
+	ptr.String("12322"),
+}
+
+func BenchmarkIsEmptyValue(b *testing.B) {
+	for i, v := range append(emptyValues, nonEmptyValues...) {
+		b.Run(fmt.Sprintf("%d: %#v", i, v), func(b *testing.B) {
+			IsEmptyValue(v)
+		})
+
+		if _, ok := v.(reflect.Value); !ok {
+			rv := reflect.ValueOf(v)
+			b.Run(fmt.Sprintf("%d: reflect.Value(%#v)", i, v), func(b *testing.B) {
+				IsEmptyValue(rv)
+			})
 		}
+	}
+}
 
+func TestIsEmptyValue(t *testing.T) {
+	for i, v := range emptyValues {
+		t.Run(fmt.Sprintf("%d: %#v", i, v), func(t *testing.T) {
+			NewWithT(t).Expect(IsEmptyValue(v)).To(BeTrue())
+		})
+
+		if _, ok := v.(reflect.Value); !ok {
+			rv := reflect.ValueOf(v)
+
+			t.Run(fmt.Sprintf("%d: reflect.Value(%#v)", i, v), func(t *testing.T) {
+				NewWithT(t).Expect(IsEmptyValue(rv)).To(BeTrue())
+			})
+		}
 	}
 }

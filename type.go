@@ -5,10 +5,15 @@ import (
 	"reflect"
 )
 
-var TypeBytes = reflect.TypeOf([]byte(""))
-
-func IsBytes(tpe reflect.Type) bool {
-	return tpe.Kind() != reflect.String && tpe.ConvertibleTo(TypeBytes)
+func IsBytes(v interface{}) bool {
+	switch x := v.(type) {
+	case []byte:
+		return true
+	case reflect.Type:
+		return x.Kind() == reflect.Slice && x.Elem().Kind() == reflect.Uint8
+	default:
+		return IsBytes(reflect.TypeOf(v))
+	}
 }
 
 func FullTypeName(rtype reflect.Type) string {
