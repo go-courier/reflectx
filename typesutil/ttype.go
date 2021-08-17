@@ -78,7 +78,7 @@ func NewTypesTypeFromReflectType(rtype reflect.Type) types.Type {
 					NewTypesTypeFromReflectType(m.Type).(*types.Signature),
 				)
 			}
-			return types.NewInterface(funcs, nil).Complete()
+			return types.NewInterfaceType(funcs, nil).Complete()
 		case reflect.Struct:
 			fields := make([]*types.Var, rtype.NumField())
 			tags := make([]string, len(fields))

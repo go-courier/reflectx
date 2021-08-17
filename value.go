@@ -43,7 +43,7 @@ func IsEmptyValue(v interface{}) bool {
 	case string:
 		return x == ""
 	case bool:
-		return x == false
+		return !x
 	case int:
 		return x == 0
 	case int8:
