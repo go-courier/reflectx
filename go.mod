@@ -1,11 +1,17 @@
 module github.com/go-courier/reflectx
 
-go 1.16
+go 1.24.0
 
 require (
 	github.com/go-courier/ptr v1.0.1
-	github.com/onsi/gomega v1.15.0
+	github.com/onsi/gomega v1.42.0
 	github.com/pkg/errors v0.9.1
-	golang.org/x/net v0.0.0-20210813160813-60bc85c4be6d // indirect
-	golang.org/x/text v0.3.7 // indirect
+)
+
+require (
+	github.com/google/go-cmp v0.7.0 // indirect
+	github.com/kr/text v0.2.0 // indirect
+	go.yaml.in/yaml/v3 v3.0.4 // indirect
+	golang.org/x/net v0.49.0 // indirect
+	golang.org/x/text v0.33.0 // indirect
 )
